@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using CidadeDorme.DTOs;
 using CidadeDorme.Models;
 using CidadeDorme.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -24,7 +23,7 @@ namespace CidadeDorme.Controllers
         }
 
         [HttpPost("entrar-sala/{codigo}")]
-        public IActionResult EntrarNaSala(string codigo, [FromBody] JogadorEntradaDTO jogadorDto)
+        public IActionResult EntrarNaSala(string codigo, [FromBody] string nomeJogador)
         {
             var sala = _salaService.ObterSala(codigo);
             if (sala == null)
@@ -36,7 +35,7 @@ namespace CidadeDorme.Controllers
             // Mapeia o DTO para o objeto Jogador
             var jogador = new Jogador
             {
-                Nome = jogadorDto.Nome
+                Nome = nomeJogador
             };
 
             _salaService.AdicionarJogador(codigo, jogador);
@@ -85,5 +84,76 @@ namespace CidadeDorme.Controllers
 
             return Ok(sala);
         }
+
+        [HttpPost("monstro-atacar/{codigo}")]
+        public IActionResult MonstroAtacar(string codigo, [FromBody] string nomeJogador)
+        {
+            try
+            {
+                _salaService.MonstroAtacar(codigo, nomeJogador);
+                return Ok("Ataque registrado!");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("anjo-salvar/{codigo}")]
+        public IActionResult AnjoSalvar(string codigo, [FromBody] string nomeJogador)
+        {
+            try
+            {
+                _salaService.AnjoSalvar(codigo, nomeJogador);
+                return Ok("Salvamento registrado!");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("detetive-acusar/{codigo}")]
+        public IActionResult DetetiveAcusar(string codigo, [FromBody] string nomeJogador)
+        {
+            try
+            {
+                var resultado = _salaService.DetetiveAcusar(codigo, nomeJogador);
+                return Ok(new { AcusadoEhMonstro = resultado });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("cidade-votar/{codigo}")]
+        public IActionResult CidadeVotar(string codigo, [FromBody] string nomeJogador)
+        {
+            try
+            {
+                _salaService.CidadeVotar(codigo, nomeJogador);
+                return Ok("Voto registrado!");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("processar-turno/{codigo}")]
+        public IActionResult ProcessarTurno(string codigo)
+        {
+            try
+            {
+                var resultado = _salaService.ProcessarTurno(codigo);
+                return Ok(new { Resultado = resultado });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
     }
 }
