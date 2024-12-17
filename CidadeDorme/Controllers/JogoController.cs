@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CidadeDorme.DTOs;
 using CidadeDorme.Models;
 using CidadeDorme.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -22,9 +23,8 @@ namespace CidadeDorme.Controllers
             return Ok(new { Codigo = sala.Codigo });
         }
 
-        // Endpoint para entrar em uma sala
         [HttpPost("entrar-sala/{codigo}")]
-        public IActionResult EntrarNaSala(string codigo, [FromBody] Jogador jogador)
+        public IActionResult EntrarNaSala(string codigo, [FromBody] JogadorEntradaDTO jogadorDto)
         {
             var sala = _salaService.ObterSala(codigo);
             if (sala == null)
@@ -33,8 +33,19 @@ namespace CidadeDorme.Controllers
             if (sala.Jogadores.Count >= 6)
                 return BadRequest("A sala já está cheia!");
 
+            // Mapeia o DTO para o objeto Jogador
+            var jogador = new Jogador
+            {
+                Nome = jogadorDto.Nome
+            };
+
             _salaService.AdicionarJogador(codigo, jogador);
-            return Ok(new { Mensagem = $"{jogador.Nome} entrou na sala {codigo}!" });
+
+            return Ok(new
+            {
+                Mensagem = $"{jogador.Nome} entrou na sala {codigo}!",
+                ConexaoId = jogador.ConexaoId // Retorna o ID gerado
+            });
         }
 
         // Endpoint para iniciar o jogo

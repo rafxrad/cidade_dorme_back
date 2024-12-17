@@ -33,3 +33,4 @@
 /home/bearer/Desktop/CidadeDorme/CidadeDorme/obj/Debug/net8.0/CidadeDorme.pdb
 /home/bearer/Desktop/CidadeDorme/CidadeDorme/obj/Debug/net8.0/CidadeDorme.genruntimeconfig.cache
 /home/bearer/Desktop/CidadeDorme/CidadeDorme/obj/Debug/net8.0/ref/CidadeDorme.dll
+/home/bearer/Desktop/CidadeDorme/CidadeDorme/obj/Debug/net8.0/CidadeDorme.sourcelink.json

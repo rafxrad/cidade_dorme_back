@@ -8,7 +8,7 @@ namespace CidadeDorme.Services
 {
     public class SalaService
     {
-        private readonly Dictionary<string, Sala> _salas = new();
+        private readonly Dictionary<string, Sala> _salas = [];
 
         public Sala CriarSala()
         {
@@ -23,9 +23,14 @@ namespace CidadeDorme.Services
 
         public void AdicionarJogador(string codigo, Jogador jogador)
         {
-            if (_salas.ContainsKey(codigo))
-                _salas[codigo].Jogadores.Add(jogador);
+            var sala = ObterSala(codigo);
+            if (sala != null)
+            {
+                jogador.ConexaoId = Guid.NewGuid().ToString(); // Gera um ID único
+                sala.Jogadores.Add(jogador);
+            }
         }
+
     }
 
 }

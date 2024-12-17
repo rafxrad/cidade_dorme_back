@@ -11,7 +11,7 @@ namespace CidadeDorme.Models
         public string? Vitima { get; set; }
         public string? Protegido { get; set; }
         public string? Investigado { get; set; }
-        public List<string> Votos { get; set; } = new List<string>();
+        public List<string> Votos { get; set; } = [];
     }
 
 }
