@@ -1,0 +1,6 @@
+@CidadeDorme_HostAddress = http://localhost:5120
+
+GET {{CidadeDorme_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
