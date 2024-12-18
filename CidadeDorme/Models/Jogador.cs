@@ -11,7 +11,6 @@ namespace CidadeDorme.Models
         public string? ConexaoId { get; set; } // Para identificar via SignalR
         public string? Papel { get; set; } // Anjo, Detetive, Monstro, Cidadão
         public bool Vivo { get; set; } = true;
-        public bool MarcadoPeloMonstro { get; set; } = false; // Indica se foi alvo do monstro
     }
 
 }

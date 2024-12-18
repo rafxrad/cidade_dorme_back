@@ -43,5 +43,11 @@ namespace CidadeDorme.Hubs
 
             await Clients.Group(codigo).SendAsync("JogoIniciado", jogadores.Select(j => j.Nome));
         }
+
+        public async Task EnviarMensagem(string codigoSala, string nomeJogador, string mensagem)
+        {
+            // Envia a mensagem para todos os jogadores na sala
+            await Clients.Group(codigoSala).SendAsync("ReceberMensagem", nomeJogador, mensagem);
+        }
     }
 }

@@ -25,26 +25,34 @@ namespace CidadeDorme.Controllers
         [HttpPost("entrar-sala/{codigo}")]
         public IActionResult EntrarNaSala(string codigo, [FromBody] string nomeJogador)
         {
-            var sala = _salaService.ObterSala(codigo);
-            if (sala == null)
-                return NotFound("Sala não encontrada!");
-
-            if (sala.Jogadores.Count >= 6)
-                return BadRequest("A sala já está cheia!");
-
-            // Mapeia o DTO para o objeto Jogador
-            var jogador = new Jogador
+            try
             {
-                Nome = nomeJogador
-            };
 
-            _salaService.AdicionarJogador(codigo, jogador);
+                var sala = _salaService.ObterSala(codigo);
+                if (sala == null)
+                    return NotFound("Sala não encontrada!");
 
-            return Ok(new
+                if (sala.Jogadores.Count >= 6)
+                    return BadRequest("A sala já está cheia!");
+
+                // Mapeia o DTO para o objeto Jogador
+                var jogador = new Jogador
+                {
+                    Nome = nomeJogador
+                };
+
+                _salaService.AdicionarJogador(codigo, jogador);
+
+                return Ok(new
+                {
+                    Mensagem = $"{jogador.Nome} entrou na sala {codigo}!",
+                    ConexaoId = jogador.ConexaoId // Retorna o ID gerado
+                });
+            }
+            catch (Exception ex)
             {
-                Mensagem = $"{jogador.Nome} entrou na sala {codigo}!",
-                ConexaoId = jogador.ConexaoId // Retorna o ID gerado
-            });
+                return BadRequest(ex.Message);
+            }
         }
 
         // Endpoint para iniciar o jogo
@@ -58,6 +66,9 @@ namespace CidadeDorme.Controllers
             if (sala.Jogadores.Count != 6)
                 return BadRequest("O jogo só pode ser iniciado com 6 jogadores!");
 
+            if (sala.Estado.Fase != "Esperando")
+                return BadRequest("O jogo já foi iniciado ou não está na fase de espera!");
+
             // Atribuir papéis aleatoriamente
             var jogadores = sala.Jogadores;
             var papeis = new[] { "Anjo", "Detetive", "Monstro", "Cidadão", "Cidadão", "Cidadão" };
@@ -70,6 +81,7 @@ namespace CidadeDorme.Controllers
             }
 
             sala.JogoIniciado = true;
+            sala.Estado.Fase = "Noite";
 
             return Ok(new { Mensagem = "Jogo iniciado!", Jogadores = jogadores });
         }
@@ -104,7 +116,7 @@ namespace CidadeDorme.Controllers
         {
             try
             {
-                _salaService.AnjoSalvar(codigo, nomeJogador);
+                _salaService.AnjoProteger(codigo, nomeJogador);
                 return Ok("Salvamento registrado!");
             }
             catch (Exception ex)
@@ -118,7 +130,7 @@ namespace CidadeDorme.Controllers
         {
             try
             {
-                var resultado = _salaService.DetetiveAcusar(codigo, nomeJogador);
+                var resultado = _salaService.DetetiveInvestigar(codigo, nomeJogador);
                 return Ok(new { AcusadoEhMonstro = resultado });
             }
             catch (Exception ex)
@@ -132,7 +144,7 @@ namespace CidadeDorme.Controllers
         {
             try
             {
-                _salaService.CidadeVotar(codigo, nomeJogador);
+                _salaService.Votar(codigo, nomeJogador);
                 return Ok("Voto registrado!");
             }
             catch (Exception ex)
@@ -154,6 +166,56 @@ namespace CidadeDorme.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
+        [HttpPost("mudar-fase/{codigo}/{novaFase}")]
+        public IActionResult MudarFase(string codigo, string novaFase)
+        {
+            try
+            {
+                _salaService.MudarFase(codigo, novaFase);
+                return Ok($"A fase foi alterada para: {novaFase}");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("apurar-votos/{codigoSala}")]
+        public IActionResult ApurarVotos(string codigoSala)
+        {
+            try
+            {
+                // Chama o serviço para apurar votos e eliminar o jogador
+                var jogadorEliminado = _salaService.ApurarVotos(codigoSala);
+
+                return Ok(new
+                {
+                    Mensagem = "Apuração realizada com sucesso!",
+                    JogadorEliminado = jogadorEliminado
+                });
+            }
+            catch (Exception ex)
+            {
+                // Retorna erro em caso de problemas
+                return BadRequest(new { Erro = ex.Message });
+            }
+        }
+
+        [HttpGet("todas-as-salas")]
+        public IActionResult ObterTodasAsSalas()
+        {
+            try
+            {
+                var salas = _salaService.ObterTodasAsSalas(); // Método que retorna todas as salas
+                return Ok(salas);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Erro = ex.Message });
+            }
+        }
+
 
     }
 }
