@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using CidadeDorme.DTOs;
 using CidadeDorme.Models;
 using CidadeDorme.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -16,37 +13,59 @@ namespace CidadeDorme.Controllers
 
         // Endpoint para criar uma nova sala
         [HttpPost("criar-sala")]
-        public IActionResult CriarSala()
+        public IActionResult CriarSala([FromBody] SalaCreateDTO salaDto)
         {
-            var sala = _salaService.CriarSala();
-            return Ok(new { Codigo = sala.Codigo });
+            if (salaDto.QuantidadeJogadores < 6)
+            {
+                return BadRequest("O número mínimo de jogadores em uma sala deve ser 6");
+            }
+            var sala = _salaService.CriarSala(salaDto.Nome, salaDto.QuantidadeJogadores, salaDto.Senha);
+            return Ok(new
+            {
+                NomeSala = sala.Nome,
+                Codigo = sala.Codigo!,
+                QuantidadeJogadores = sala.QuantidadeJogadores!
+            });
         }
 
-        [HttpPost("entrar-sala/{codigo}")]
-        public IActionResult EntrarNaSala(string codigo, [FromBody] string nomeJogador)
+        [HttpDelete("destruir-sala/{codigoSala}")]
+        public IActionResult DestruirSala(string codigoSala)
         {
             try
             {
+                _salaService.DestruirSala(codigoSala);
+                return NoContent();                
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
 
+        [HttpPost("entrar-sala/{codigo}")]
+        public IActionResult EntrarNaSala(string codigo, [FromBody] ConectarSalaDTO conectarDTO) 
+        {
+            try
+            {
                 var sala = _salaService.ObterSala(codigo);
                 if (sala == null)
                     return NotFound("Sala não encontrada!");
 
-                if (sala.Jogadores.Count >= 6)
+                if (sala.Jogadores.Count >= sala.QuantidadeJogadores)
                     return BadRequest("A sala já está cheia!");
 
                 // Mapeia o DTO para o objeto Jogador
                 var jogador = new Jogador
                 {
-                    Nome = nomeJogador
+                    Nome = conectarDTO.NomeJogador
                 };
 
-                _salaService.AdicionarJogador(codigo, jogador);
+                _salaService.AdicionarJogador(codigo, jogador, conectarDTO.Senha);
 
                 return Ok(new
                 {
                     Mensagem = $"{jogador.Nome} entrou na sala {codigo}!",
-                    ConexaoId = jogador.ConexaoId // Retorna o ID gerado
+                    ConexaoId = jogador.ConexaoId! 
                 });
             }
             catch (Exception ex)
@@ -140,11 +159,11 @@ namespace CidadeDorme.Controllers
         }
 
         [HttpPost("cidade-votar/{codigo}")]
-        public IActionResult CidadeVotar(string codigo, [FromBody] string nomeJogador)
+        public IActionResult CidadeVotar(string codigo, [FromBody] VotarDTO votoDTO)
         {
             try
             {
-                _salaService.Votar(codigo, nomeJogador);
+                _salaService.Votar(codigo, votoDTO.NomeJogador, votoDTO.NomeVotado);
                 return Ok("Voto registrado!");
             }
             catch (Exception ex)
@@ -160,20 +179,6 @@ namespace CidadeDorme.Controllers
             {
                 var resultado = _salaService.ProcessarTurno(codigo);
                 return Ok(new { Resultado = resultado });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-        }
-
-        [HttpPost("mudar-fase/{codigo}/{novaFase}")]
-        public IActionResult MudarFase(string codigo, string novaFase)
-        {
-            try
-            {
-                _salaService.MudarFase(codigo, novaFase);
-                return Ok($"A fase foi alterada para: {novaFase}");
             }
             catch (Exception ex)
             {

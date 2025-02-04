@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CidadeDorme.DTOs;
 using CidadeDorme.Models;
 using CidadeDorme.Services;
 using Microsoft.AspNetCore.SignalR;
@@ -12,16 +13,16 @@ namespace CidadeDorme.Hubs
     {
         private readonly SalaService _salaService = salaService;
 
-        public async Task EntrarNaSala(string codigo, string nome)
+        public async Task EntrarNaSala(string codigo, ConectarSalaDTO conectarDTO)
         {
             var sala = _salaService.ObterSala(codigo);
             if (sala == null || sala.Jogadores.Count >= 6)
                 throw new HubException("Sala inválida ou cheia!");
 
-            var jogador = new Jogador { Nome = nome, ConexaoId = Context.ConnectionId };
-            _salaService.AdicionarJogador(codigo, jogador);
+            var jogador = new Jogador { Nome = conectarDTO.NomeJogador, ConexaoId = Context.ConnectionId };
+            _salaService.AdicionarJogador(codigo, jogador, conectarDTO.Senha);
 
-            await Clients.Group(codigo).SendAsync("JogadorEntrou", nome);
+            await Clients.Group(codigo).SendAsync("JogadorEntrou", conectarDTO.NomeJogador);
             await Groups.AddToGroupAsync(Context.ConnectionId, codigo);
         }
 

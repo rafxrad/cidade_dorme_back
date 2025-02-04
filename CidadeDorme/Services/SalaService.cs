@@ -10,20 +10,44 @@ namespace CidadeDorme.Services
     {
         private readonly Dictionary<string, Sala> _salas = [];
 
-        public Sala CriarSala()
+        public Sala CriarSala(string nome, int quantidadeJogadores, string? senha = null)
         {
             var codigo = Guid.NewGuid().ToString().Substring(0, 6).ToUpper();
-            var sala = new Sala { Codigo = codigo };
+            var sala = new Sala
+            {
+                Nome = nome,
+                Codigo = codigo,
+                Senha = senha,
+                QuantidadeJogadores = quantidadeJogadores
+            };
+
             _salas[codigo] = sala;
             return sala;
+        }
+
+        public void DestruirSala(string codigoSala)
+        {
+            if (!_salas.ContainsKey(codigoSala))
+            {
+                throw new Exception("Sala não encontrada!");
+            }
+
+            // Remover a sala do dicionário
+            _salas.Remove(codigoSala);
         }
 
         public Sala? ObterSala(string codigo) =>
             _salas.TryGetValue(codigo, out var sala) ? sala : null;
 
-        public void AdicionarJogador(string codigoSala, Jogador jogador)
+        public void AdicionarJogador(string codigoSala, Jogador jogador, string? senha)
         {
             var sala = ObterSala(codigoSala) ?? throw new Exception("Sala não encontrada!");
+
+            // Verificar se a sala exige senha e se a senha foi fornecida corretamente
+            if (!string.IsNullOrEmpty(sala.Senha) && sala.Senha != senha)
+            {
+                throw new Exception("Senha incorreta para acessar a sala.");
+            }
 
             // Verifica se já existe um jogador com o mesmo nome
             if (sala.Jogadores.Any(j => j.Nome.Equals(jogador.Nome, StringComparison.OrdinalIgnoreCase)))
@@ -65,21 +89,33 @@ namespace CidadeDorme.Services
         }
 
 
-        public void Votar(string codigoSala, string nomeJogador)
+        public void Votar(string codigoSala, string nomeJogador, string nomeVotado)
         {
             var sala = ObterSala(codigoSala) ?? throw new Exception("Sala não encontrada!");
+
             if (sala.Estado.Fase != "Dia")
                 throw new Exception("A fase atual não permite votos!");
 
             var jogador = sala.Jogadores.FirstOrDefault(j => j.Nome == nomeJogador)
                 ?? throw new Exception("Jogador não encontrado!");
 
+            var jogadorVotado = sala.Jogadores.FirstOrDefault(j => j.Nome == nomeVotado)
+                ?? throw new Exception("Jogador votado não encontrado!");
+
             // Verificar se o jogador está vivo
             if (!jogador.Vivo)
+                throw new Exception("Jogadores mortos não podem votar!");
+
+            // Verificar se o jogador votado está vivo
+            if (!jogadorVotado.Vivo)
                 throw new Exception("Não é possível votar em um jogador que está morto!");
 
-            // Adicionar voto
-            sala.Estado.Votos.Add(nomeJogador);
+            // Verificar se o jogador já votou
+            if (sala.Estado.Votos.ContainsKey(nomeJogador))
+                throw new Exception("Jogador já votou e não pode votar novamente!");
+
+            // Adicionar o voto (quem votou -> em quem votou)
+            sala.Estado.Votos[nomeJogador] = nomeVotado;
         }
 
 
@@ -125,10 +161,10 @@ namespace CidadeDorme.Services
             if (sala.Estado.Fase != "Dia")
                 throw new Exception("A apuração só pode ser feita na fase de Dia!");
 
-            // Apurar votos
+            // Apurar votos - contar quem recebeu mais votos
             var votos = sala.Estado.Votos
-                .GroupBy(v => v)
-                .OrderByDescending(g => g.Count())
+                .GroupBy(v => v.Value) // Agrupar pelo nome do jogador votado
+                .OrderByDescending(g => g.Count()) // Ordenar pelos votos recebidos
                 .FirstOrDefault();
 
             if (votos == null || string.IsNullOrEmpty(votos.Key))
@@ -165,7 +201,8 @@ namespace CidadeDorme.Services
         }
 
 
-        public void MudarFase(string codigoSala, string novaFase)
+
+        private void MudarFase(string codigoSala, string novaFase)
         {
             var sala = ObterSala(codigoSala) ?? throw new Exception("Sala não encontrada!");
             sala.Estado.Fase = novaFase;
@@ -185,8 +222,9 @@ namespace CidadeDorme.Services
 
         public List<Sala> ObterTodasAsSalas()
         {
-            return [.. _salas.Values];
+            return _salas.Values.ToList();
         }
+
 
     }
 
