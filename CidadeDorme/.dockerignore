@@ -1,3 +1,5 @@
 node_modules
-dist
 .git
+dist
+# Não ignore arquivos .dll que são necessários para rodar a aplicação
+!**/*.dll
