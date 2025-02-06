@@ -20,7 +20,7 @@ RUN dotnet publish "CidadeDorme.csproj" -c Release -o /app/publish
 
 # Etapa final: Imagem para execução (runtime)
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
-ENV ASPNETCORE_HTTP_PORTS=5001
+ENV ASPNETCORE_URLS=http://+:5001
 EXPOSE 5001
 WORKDIR /app
 # Copiar os arquivos compilados do contêiner de build
