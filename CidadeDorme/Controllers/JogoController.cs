@@ -20,6 +20,9 @@ namespace CidadeDorme.Controllers
                 return BadRequest("O número mínimo de jogadores em uma sala deve ser 6");
             }
             var sala = _salaService.CriarSala(salaDto.Nome, salaDto.QuantidadeJogadores, salaDto.Senha);
+
+            _salaService.EnviarMensagemSistema(sala.Codigo!, "Sala criada, com sucesso");
+
             return Ok(new
             {
                 NomeSala = sala.Nome,
@@ -62,10 +65,12 @@ namespace CidadeDorme.Controllers
 
                 _salaService.AdicionarJogador(codigo, jogador, conectarDTO.Senha);
 
+                _salaService.EnviarMensagemSistema(sala.Codigo!, $"{jogador.Nome} entrou na sala");
+
                 return Ok(new
                 {
                     Mensagem = $"{jogador.Nome} entrou na sala {codigo}!",
-                    ConexaoId = jogador.ConexaoId! 
+                    ConexaoId = jogador.ConexaoId!
                 });
             }
             catch (Exception ex)
@@ -83,7 +88,7 @@ namespace CidadeDorme.Controllers
                 return NotFound("Sala não encontrada!");
 
             if (sala.Jogadores.Count != 6)
-                return BadRequest("O jogo só pode ser iniciado com 6 jogadores!");
+                return BadRequest("O jogo só pode ser iniciado com 6 jogadores ou mais!");
 
             if (sala.Estado.Fase != "Esperando")
                 return BadRequest("O jogo já foi iniciado ou não está na fase de espera!");
@@ -101,6 +106,9 @@ namespace CidadeDorme.Controllers
 
             sala.JogoIniciado = true;
             sala.Estado.Fase = "Noite";
+
+            _salaService.EnviarMensagemSistema(sala.Codigo!, "A noite cai sobre a cidade... olhos se fecham, mas o perigo espreita. O jogo começou!");
+
 
             return Ok(new { Mensagem = "Jogo iniciado!", Jogadores = jogadores });
         }
@@ -122,6 +130,9 @@ namespace CidadeDorme.Controllers
             try
             {
                 _salaService.MonstroAtacar(codigo, nomeJogador);
+
+                _salaService.EnviarMensagemSistema(codigo, "O vento trouxe um sussurro sombrio... o destino de alguém foi selado");
+
                 return Ok("Ataque registrado!");
             }
             catch (Exception ex)
@@ -136,6 +147,9 @@ namespace CidadeDorme.Controllers
             try
             {
                 _salaService.AnjoProteger(codigo, nomeJogador);
+
+                _salaService.EnviarMensagemSistema(codigo, "Alguém sentiu um calor inexplicável... talvez um destino tenha sido mudado");
+
                 return Ok("Salvamento registrado!");
             }
             catch (Exception ex)
@@ -150,6 +164,9 @@ namespace CidadeDorme.Controllers
             try
             {
                 var resultado = _salaService.DetetiveInvestigar(codigo, nomeJogador);
+
+                _salaService.EnviarMensagemSistema(codigo, "O Detetive passou a noite observando... mas o que ele descobriu?");
+
                 return Ok(new { AcusadoEhMonstro = resultado });
             }
             catch (Exception ex)
@@ -172,12 +189,29 @@ namespace CidadeDorme.Controllers
             }
         }
 
+        [HttpPost("enviar-mensagem/{codigo}")]
+        public IActionResult EnviarMensagem(string codigo, [FromBody] MensagemDTO mensagemDTO)
+        {
+            try
+            {
+                _salaService.EnviarMensagem(codigo, mensagemDTO.NomeJogador, mensagemDTO.Conteudo);
+                return Ok("Mensagem registrada registrado!");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
         [HttpPost("processar-turno/{codigo}")]
         public IActionResult ProcessarTurno(string codigo)
         {
             try
             {
                 var resultado = _salaService.ProcessarTurno(codigo);
+
+                _salaService.EnviarMensagemSistema(codigo, "Os primeiros raios de sol iluminam a vila... um novo dia começa, mas a que custo?");
+
                 return Ok(new { Resultado = resultado });
             }
             catch (Exception ex)
@@ -193,6 +227,8 @@ namespace CidadeDorme.Controllers
             {
                 // Chama o serviço para apurar votos e eliminar o jogador
                 var jogadorEliminado = _salaService.ApurarVotos(codigoSala);
+
+                _salaService.EnviarMensagemSistema(codigoSala, "A multidão murmura, dedos apontam... e um nome é dito em voz alta.");
 
                 return Ok(new
                 {

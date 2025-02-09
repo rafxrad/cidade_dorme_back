@@ -7,11 +7,9 @@
 /home/bearer/Desktop/CidadeDorme/CidadeDorme/bin/Debug/net8.0/CidadeDorme.pdb
 /home/bearer/Desktop/CidadeDorme/CidadeDorme/bin/Debug/net8.0/Microsoft.AspNetCore.OpenApi.dll
 /home/bearer/Desktop/CidadeDorme/CidadeDorme/bin/Debug/net8.0/Microsoft.OpenApi.dll
-/home/bearer/Desktop/CidadeDorme/CidadeDorme/bin/Debug/net8.0/Newtonsoft.Json.dll
 /home/bearer/Desktop/CidadeDorme/CidadeDorme/bin/Debug/net8.0/Swashbuckle.AspNetCore.Swagger.dll
 /home/bearer/Desktop/CidadeDorme/CidadeDorme/bin/Debug/net8.0/Swashbuckle.AspNetCore.SwaggerGen.dll
 /home/bearer/Desktop/CidadeDorme/CidadeDorme/bin/Debug/net8.0/Swashbuckle.AspNetCore.SwaggerUI.dll
-/home/bearer/Desktop/CidadeDorme/CidadeDorme/bin/Debug/net8.0/System.Net.WebSockets.WebSocketProtocol.dll
 /home/bearer/Desktop/CidadeDorme/CidadeDorme/obj/Debug/net8.0/CidadeDorme.csproj.AssemblyReference.cache
 /home/bearer/Desktop/CidadeDorme/CidadeDorme/obj/Debug/net8.0/CidadeDorme.GeneratedMSBuildEditorConfig.editorconfig
 /home/bearer/Desktop/CidadeDorme/CidadeDorme/obj/Debug/net8.0/CidadeDorme.AssemblyInfoInputs.cache
@@ -34,9 +32,3 @@
 /home/bearer/Desktop/CidadeDorme/CidadeDorme/obj/Debug/net8.0/CidadeDorme.genruntimeconfig.cache
 /home/bearer/Desktop/CidadeDorme/CidadeDorme/obj/Debug/net8.0/ref/CidadeDorme.dll
 /home/bearer/Desktop/CidadeDorme/CidadeDorme/obj/Debug/net8.0/CidadeDorme.sourcelink.json
-/home/bearer/Desktop/CidadeDorme/CidadeDorme/bin/Debug/net8.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll
-/home/bearer/Desktop/CidadeDorme/CidadeDorme/bin/Debug/net8.0/Microsoft.Extensions.Logging.Abstractions.dll
-/home/bearer/Desktop/CidadeDorme/CidadeDorme/bin/Debug/net8.0/Microsoft.Extensions.Options.dll
-/home/bearer/Desktop/CidadeDorme/CidadeDorme/bin/Debug/net8.0/Microsoft.Extensions.Diagnostics.Abstractions.dll
-/home/bearer/Desktop/CidadeDorme/CidadeDorme/bin/Debug/net8.0/Microsoft.Extensions.Hosting.Abstractions.dll
-/home/bearer/Desktop/CidadeDorme/CidadeDorme/bin/Debug/net8.0/Microsoft.Extensions.ObjectPool.dll
