@@ -12,7 +12,14 @@ namespace CidadeDorme.Services
 
         public Sala CriarSala(string nome, int quantidadeJogadores, string? senha = null)
         {
+            // Verifica se já existe uma sala com o mesmo nome
+            if (_salas.Values.Any(s => s.Nome.Equals(nome, StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new Exception("Já existe uma sala com esse nome!");
+            }
+            
             var codigo = Guid.NewGuid().ToString().Substring(0, 6).ToUpper();
+
             var sala = new Sala
             {
                 Nome = nome,
@@ -20,6 +27,7 @@ namespace CidadeDorme.Services
                 Senha = senha,
                 QuantidadeJogadores = quantidadeJogadores
             };
+
 
             _salas[codigo] = sala;
             return sala;
@@ -41,6 +49,11 @@ namespace CidadeDorme.Services
 
         public void AdicionarJogador(string codigoSala, Jogador jogador, string? senha)
         {
+            if (jogador.Nome.ToLower() == "sistema")
+            {
+                throw new Exception("Nome indisponível para uso");
+            }
+
             var sala = ObterSala(codigoSala) ?? throw new Exception("Sala não encontrada!");
 
             // Verificar se a sala exige senha e se a senha foi fornecida corretamente

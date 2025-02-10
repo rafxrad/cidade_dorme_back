@@ -15,20 +15,27 @@ namespace CidadeDorme.Controllers
         [HttpPost("criar-sala")]
         public IActionResult CriarSala([FromBody] SalaCreateDTO salaDto)
         {
-            if (salaDto.QuantidadeJogadores < 6)
+            try
             {
-                return BadRequest("O número mínimo de jogadores em uma sala deve ser 6");
+                if (salaDto.QuantidadeJogadores < 6)
+                {
+                    return BadRequest("O número mínimo de jogadores em uma sala deve ser 6");
+                }
+                var sala = _salaService.CriarSala(salaDto.Nome, salaDto.QuantidadeJogadores, salaDto.Senha);
+
+                _salaService.EnviarMensagemSistema(sala.Codigo!, "Sala criada, com sucesso");
+
+                return Ok(new
+                {
+                    NomeSala = sala.Nome,
+                    Codigo = sala.Codigo!,
+                    QuantidadeJogadores = sala.QuantidadeJogadores!
+                });
             }
-            var sala = _salaService.CriarSala(salaDto.Nome, salaDto.QuantidadeJogadores, salaDto.Senha);
-
-            _salaService.EnviarMensagemSistema(sala.Codigo!, "Sala criada, com sucesso");
-
-            return Ok(new
+            catch (Exception ex)
             {
-                NomeSala = sala.Nome,
-                Codigo = sala.Codigo!,
-                QuantidadeJogadores = sala.QuantidadeJogadores!
-            });
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpDelete("destruir-sala/{codigoSala}")]
@@ -37,7 +44,7 @@ namespace CidadeDorme.Controllers
             try
             {
                 _salaService.DestruirSala(codigoSala);
-                return NoContent();                
+                return NoContent();
             }
             catch (Exception ex)
             {
@@ -46,7 +53,7 @@ namespace CidadeDorme.Controllers
         }
 
         [HttpPost("entrar-sala/{codigo}")]
-        public IActionResult EntrarNaSala(string codigo, [FromBody] ConectarSalaDTO conectarDTO) 
+        public IActionResult EntrarNaSala(string codigo, [FromBody] ConectarSalaDTO conectarDTO)
         {
             try
             {
@@ -125,11 +132,11 @@ namespace CidadeDorme.Controllers
         }
 
         [HttpPost("monstro-atacar/{codigo}")]
-        public IActionResult MonstroAtacar(string codigo, [FromBody] string nomeJogador)
+        public IActionResult MonstroAtacar(string codigo, [FromBody] NomeJogadorDTO dto)
         {
             try
             {
-                _salaService.MonstroAtacar(codigo, nomeJogador);
+                _salaService.MonstroAtacar(codigo, dto.NomeJogador);
 
                 _salaService.EnviarMensagemSistema(codigo, "O vento trouxe um sussurro sombrio... o destino de alguém foi selado");
 
@@ -142,11 +149,11 @@ namespace CidadeDorme.Controllers
         }
 
         [HttpPost("anjo-salvar/{codigo}")]
-        public IActionResult AnjoSalvar(string codigo, [FromBody] string nomeJogador)
+        public IActionResult AnjoSalvar(string codigo, [FromBody] NomeJogadorDTO dto)
         {
             try
             {
-                _salaService.AnjoProteger(codigo, nomeJogador);
+                _salaService.AnjoProteger(codigo, dto.NomeJogador);
 
                 _salaService.EnviarMensagemSistema(codigo, "Alguém sentiu um calor inexplicável... talvez um destino tenha sido mudado");
 
@@ -159,11 +166,11 @@ namespace CidadeDorme.Controllers
         }
 
         [HttpPost("detetive-acusar/{codigo}")]
-        public IActionResult DetetiveAcusar(string codigo, [FromBody] string nomeJogador)
+        public IActionResult DetetiveAcusar(string codigo, [FromBody] NomeJogadorDTO dto)
         {
             try
             {
-                var resultado = _salaService.DetetiveInvestigar(codigo, nomeJogador);
+                var resultado = _salaService.DetetiveInvestigar(codigo, dto.NomeJogador);
 
                 _salaService.EnviarMensagemSistema(codigo, "O Detetive passou a noite observando... mas o que ele descobriu?");
 
@@ -211,6 +218,7 @@ namespace CidadeDorme.Controllers
                 var resultado = _salaService.ProcessarTurno(codigo);
 
                 _salaService.EnviarMensagemSistema(codigo, "Os primeiros raios de sol iluminam a vila... um novo dia começa, mas a que custo?");
+                _salaService.EnviarMensagemSistema(codigo, $"{resultado}");
 
                 return Ok(new { Resultado = resultado });
             }

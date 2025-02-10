@@ -10,6 +10,20 @@ builder.Services.AddSignalR();
 
 builder.Services.AddSingleton<SalaService>();
 
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: MyAllowSpecificOrigins,
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:5173") // Permite requisições do frontend
+                  .AllowAnyMethod() // Permite GET, POST, PUT, DELETE
+                  .AllowAnyHeader() // Permite qualquer cabeçalho
+                  .AllowCredentials(); // Permite cookies/autenticação (se necessário)
+        });
+});
+
 builder.WebHost.ConfigureKestrel(options =>
 {
     options.ListenAnyIP(5000); // Altere a porta se necessário
@@ -26,7 +40,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-
+app.UseCors(MyAllowSpecificOrigins);
 // Mapeia os endpoints do SignalR e dos controllers
 app.UseRouting();
 app.UseAuthorization();
