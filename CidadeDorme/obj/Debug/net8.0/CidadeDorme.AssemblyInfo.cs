@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CidadeDorme")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c74d70b65cbe4f8caff133fdd47081fb7c673a8c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4bea79cb7bbaa9360f3b643dfc3e7dd266c894c5")]
 [assembly: System.Reflection.AssemblyProductAttribute("CidadeDorme")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CidadeDorme")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

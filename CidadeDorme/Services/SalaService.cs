@@ -12,7 +12,14 @@ namespace CidadeDorme.Services
 
         public Sala CriarSala(string nome, int quantidadeJogadores, string? senha = null)
         {
+            // Verifica se já existe uma sala com o mesmo nome
+            if (_salas.Values.Any(s => s.Nome.Equals(nome, StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new Exception("Já existe uma sala com esse nome!");
+            }
+            
             var codigo = Guid.NewGuid().ToString().Substring(0, 6).ToUpper();
+
             var sala = new Sala
             {
                 Nome = nome,
@@ -20,6 +27,7 @@ namespace CidadeDorme.Services
                 Senha = senha,
                 QuantidadeJogadores = quantidadeJogadores
             };
+
 
             _salas[codigo] = sala;
             return sala;
@@ -41,6 +49,11 @@ namespace CidadeDorme.Services
 
         public void AdicionarJogador(string codigoSala, Jogador jogador, string? senha)
         {
+            if (jogador.Nome.ToLower() == "sistema")
+            {
+                throw new Exception("Nome indisponível para uso");
+            }
+
             var sala = ObterSala(codigoSala) ?? throw new Exception("Sala não encontrada!");
 
             // Verificar se a sala exige senha e se a senha foi fornecida corretamente
@@ -66,6 +79,19 @@ namespace CidadeDorme.Services
             var sala = ObterSala(codigoSala) ?? throw new Exception("Sala não encontrada!");
             if (sala.Estado.Fase != "Noite") throw new Exception("A fase atual não permite essa ação!");
 
+            var jogador = sala.Jogadores.FirstOrDefault(j => j.Nome == nomeJogador)
+                ?? throw new Exception("Jogador não encontrado!");
+
+            if (!jogador.Vivo)
+                throw new Exception("O Monstro não pode atacar um jogador morto!");
+
+            var monstro = sala.Jogadores.FirstOrDefault(j => j.Papel == "Monstro" && j.Vivo);
+            if (monstro == null)
+                throw new Exception("Nenhum monstro vivo encontrado na sala!");
+
+            if (monstro.Nome == nomeJogador)
+                throw new Exception("O Monstro não pode atacar a si mesmo!");
+
             sala.Estado.Vitima = nomeJogador;
         }
 
@@ -73,6 +99,15 @@ namespace CidadeDorme.Services
         {
             var sala = ObterSala(codigoSala) ?? throw new Exception("Sala não encontrada!");
             if (sala.Estado.Fase != "Noite") throw new Exception("A fase atual não permite essa ação!");
+
+            if (string.IsNullOrEmpty(sala.Estado.Vitima))
+                throw new Exception("O Anjo só pode proteger após o Monstro atacar!");
+
+            var jogador = sala.Jogadores.FirstOrDefault(j => j.Nome == nomeJogador)
+                ?? throw new Exception("Jogador não encontrado!");
+
+            if (!jogador.Vivo)
+                throw new Exception("O Anjo não pode proteger um jogador morto!");
 
             sala.Estado.Protegido = nomeJogador;
         }
@@ -82,12 +117,15 @@ namespace CidadeDorme.Services
             var sala = ObterSala(codigoSala) ?? throw new Exception("Sala não encontrada!");
             if (sala.Estado.Fase != "Noite") throw new Exception("A fase atual não permite essa ação!");
 
+            var jogador = sala.Jogadores.FirstOrDefault(j => j.Nome == nomeJogador)
+                ?? throw new Exception("Jogador não encontrado!");
+
+            if (!jogador.Vivo)
+                throw new Exception("O Detetive não pode investigar um jogador morto!");
+
             sala.Estado.Investigado = nomeJogador;
-
-            var jogador = sala.Jogadores.FirstOrDefault(j => j.Nome == nomeJogador);
-            return jogador?.Papel == "Monstro";
+            return jogador.Papel == "Monstro";
         }
-
 
         public void Votar(string codigoSala, string nomeJogador, string nomeVotado)
         {
@@ -116,6 +154,46 @@ namespace CidadeDorme.Services
 
             // Adicionar o voto (quem votou -> em quem votou)
             sala.Estado.Votos[nomeJogador] = nomeVotado;
+        }
+
+        public void EnviarMensagem(string codigoSala, string nomeJogador, string conteudo)
+        {
+            var sala = ObterSala(codigoSala) ?? throw new Exception("Sala não encontrada!");
+
+            if (sala.Estado.Fase != "Dia")
+                throw new Exception("A fase atual não permite votos!");
+
+            var jogador = sala.Jogadores.FirstOrDefault(j => j.Nome == nomeJogador)
+                ?? throw new Exception("Jogador não encontrado!");
+
+            // Verificar se o jogador está vivo
+            if (!jogador.Vivo)
+                throw new Exception("Morto não fala!");
+
+            // Criar a mensagem com timestamp
+            var mensagem = new Mensagem
+            {
+                NomeJogador = nomeJogador,
+                Conteudo = conteudo,
+            };
+
+            // Adicionar a mensagem na lista
+            sala.Estado.Mensagens.Add(mensagem);
+        }
+
+        public void EnviarMensagemSistema(string codigoSala, string conteudo)
+        {
+            var sala = ObterSala(codigoSala) ?? throw new Exception("Sala não encontrada!");
+
+            // Criar a mensagem com timestamp
+            var mensagem = new Mensagem
+            {
+                NomeJogador = "Sistema",
+                Conteudo = conteudo,
+            };
+
+            // Adicionar a mensagem na lista
+            sala.Estado.Mensagens.Add(mensagem);
         }
 
 
@@ -161,12 +239,23 @@ namespace CidadeDorme.Services
             if (sala.Estado.Fase != "Dia")
                 throw new Exception("A apuração só pode ser feita na fase de Dia!");
 
-            // Apurar votos - contar quem recebeu mais votos
-            var votos = sala.Estado.Votos
+            var totalVivos = sala.Jogadores.Count(j => j.Vivo);
+            var totalVotos = sala.Estado.Votos.Count;
+
+            // Verificar se pelo menos metade dos jogadores vivos votou
+            if (totalVotos < Math.Ceiling(totalVivos / 2.0))
+                return "Votação inconclusiva. Nem metade dos jogadores votou.";
+
+            // Contar votos e verificar empate
+            var votosAgrupados = sala.Estado.Votos
                 .GroupBy(v => v.Value) // Agrupar pelo nome do jogador votado
                 .OrderByDescending(g => g.Count()) // Ordenar pelos votos recebidos
-                .FirstOrDefault();
+                .ToList();
 
+            if (votosAgrupados.Count > 1 && votosAgrupados[0].Count() == votosAgrupados[1].Count())
+                return "A votação resultou em empate. Ninguém foi eliminado.";
+
+            var votos = votosAgrupados.FirstOrDefault();
             if (votos == null || string.IsNullOrEmpty(votos.Key))
                 throw new Exception("Nenhum voto foi registrado.");
 
@@ -181,7 +270,7 @@ namespace CidadeDorme.Services
             {
                 sala.JogoIniciado = false; // Finalizar o jogo
                 sala.Estado.Fase = "Finalizado";
-                return "A cidade venceu! O monstro foi eliminado!";
+                return $"A cidade venceu! O monstro ({jogadorEliminado.Nome}) foi eliminado!";
             }
 
             // Verificar condição de vitória do monstro
@@ -199,8 +288,6 @@ namespace CidadeDorme.Services
 
             return $"O jogador {jogadorEliminado.Nome} foi eliminado.";
         }
-
-
 
         private void MudarFase(string codigoSala, string novaFase)
         {
